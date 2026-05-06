@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ job.title }} - SmartHire{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+            <h2 style="color: var(--primary-color); margin-bottom: 0.5rem;">{{ job.title }}</h2>
+            <div class="job-meta" style="font-size: 1.1rem;">
+                <strong>{{ job.company }}</strong> &bull; {{ job.location }}
+            </div>
+            <p style="color: #6c757d; margin-bottom: 1rem;">Posted by {{ job.posted_by }} on {{ job.created_at.strftime('%Y-%m-%d') }}</p>
+        </div>
+        
+        {% if session.get('role') == 'job_seeker' %}
+            <a href="{{ url_for('apply', id=job.id) }}" class="btn" style="font-size: 1.2rem; padding: 0.75rem 1.5rem;">Apply Now</a>
+        {% elif not session.get('user_id') %}
+            <a href="{{ url_for('login') }}" class="btn" style="background-color: #6c757d;">Login to Apply</a>
+        {% endif %}
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
+
+    <h3>Job Description</h3>
+    <br>
+    <div style="white-space: pre-wrap; font-size: 1.05rem;">{{ job.description }}</div>
+    
+    <br><br>
+    <a href="{{ url_for('index') }}" style="color: var(--primary-color); text-decoration: none;">&larr; Back to Jobs</a>
+</div>
+{% endblock %}

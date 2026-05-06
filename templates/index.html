@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - SmartHire{% endblock %}
+
+{% block content %}
+<div class="search-bar">
+    <form action="{{ url_for('index') }}" method="GET" style="display: flex; width: 100%; gap: 0.5rem;">
+        <input type="text" name="q" class="form-control" placeholder="Search jobs by title or location..." value="{{ search_query }}">
+        <button type="submit" class="btn">Search</button>
+        {% if search_query %}
+            <a href="{{ url_for('index') }}" class="btn" style="background-color: #6c757d;">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<h2>Latest Jobs</h2>
+<p>Find your next opportunity with SmartHire.</p>
+<br>
+
+<div class="job-list">
+    {% if jobs %}
+        {% for job in jobs %}
+            <div class="card job-card">
+                <a href="{{ url_for('job_details', id=job.id) }}" class="job-title">{{ job.title }}</a>
+                <div class="job-meta">
+                    <strong>{{ job.company }}</strong> &bull; {{ job.location }} &bull; Posted on {{ job.created_at.strftime('%Y-%m-%d') }}
+                </div>
+                <p class="job-desc">{{ job.description[:150] }}...</p>
+                <br>
+                <a href="{{ url_for('job_details', id=job.id) }}" class="btn btn-sm">View Details</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No jobs found.</p>
+    {% endif %}
+</div>
+{% endblock %}

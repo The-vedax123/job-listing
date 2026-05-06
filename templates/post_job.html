@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Post a Job - SmartHire{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 600px; margin: 0 auto;">
+    <h2>Post a New Job</h2>
+    <br>
+    <form action="{{ url_for('post_job') }}" method="POST">
+        <div class="form-group">
+            <label for="title">Job Title</label>
+            <input type="text" id="title" name="title" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="company">Company Name</label>
+            <input type="text" id="company" name="company" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" id="location" name="location" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="description">Job Description</label>
+            <textarea id="description" name="description" class="form-control" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="btn" style="width: 100%;">Post Job</button>
+    </form>
+</div>
+{% endblock %}

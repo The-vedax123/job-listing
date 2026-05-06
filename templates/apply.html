@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for {{ job.title }} - SmartHire{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 700px; margin: 0 auto;">
+    <h2>Apply for Job: {{ job.title }}</h2>
+    <p style="color: #6c757d; margin-bottom: 1.5rem;">at <strong>{{ job.company }}</strong> ({{ job.location }})</p>
+    
+    <form action="{{ url_for('apply', id=job.id) }}" method="POST">
+        <div class="form-group">
+            <label for="cover_letter">Cover Letter</label>
+            <textarea id="cover_letter" name="cover_letter" class="form-control" rows="10" placeholder="Explain why you are a good fit for this role..." required></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn" style="flex: 1;">Submit Application</button>
+            <a href="{{ url_for('job_details', id=job.id) }}" class="btn" style="background-color: #6c757d; text-align: center;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

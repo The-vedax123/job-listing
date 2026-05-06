@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - SmartHire{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>Dashboard</h2>
+    <p>Welcome, {{ session['username'] }} ({{ session['role'] }})</p>
+</div>
+
+<div class="card">
+    {% if session['role'] == 'employer' %}
+        <h3>Your Posted Jobs</h3>
+        <br>
+        {% if jobs %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Location</th>
+                        <th>Posted Date</th>
+                        <th>Applications</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                    <tr>
+                        <td><a href="{{ url_for('job_details', id=job.id) }}">{{ job.title }}</a></td>
+                        <td>{{ job.location }}</td>
+                        <td>{{ job.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ job.app_count }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_job', id=job.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this job?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>You haven't posted any jobs yet.</p>
+        {% endif %}
+        <br>
+        <a href="{{ url_for('post_job') }}" class="btn">Post a New Job</a>
+
+    {% else %}
+        <h3>Your Applications</h3>
+        <br>
+        {% if applications %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Job Title</th>
+                        <th>Company</th>
+                        <th>Applied Date</th>
+                        <th>Cover Letter</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in applications %}
+                    <tr>
+                        <td><a href="{{ url_for('job_details', id=app.job_id) }}">{{ app.title }}</a></td>
+                        <td>{{ app.company }}</td>
+                        <td>{{ app.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ app.cover_letter[:50] }}...</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>You haven't applied to any jobs yet.</p>
+        {% endif %}
+        <br>
+        <a href="{{ url_for('index') }}" class="btn">Browse Jobs</a>
+    {% endif %}
+</div>
+{% endblock %}
