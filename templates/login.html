@@ -1,23 +1,37 @@
 {% extends 'base.html' %}
 
-{% block title %}Login - SmartHire{% endblock %}
+{% block title %}Login - Chizhya's Career Hub{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 500px; margin: 0 auto;">
-    <h2>Login</h2>
-    <br>
-    <form action="{{ url_for('login') }}" method="POST">
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" class="form-control" required>
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
+        <div class="card border-0 shadow-sm sh-form-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="sh-auth-icon rounded-3 d-inline-flex align-items-center justify-content-center mb-3">
+                        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+                    </div>
+                    <h1 class="h4 fw-bold text-dark mb-1">Welcome back</h1>
+                    <p class="text-secondary small mb-0">Log in to manage applications and listings.</p>
+                </div>
+                <form action="{{ url_for('login') }}" method="POST" class="sh-form">
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-medium text-dark">Email</label>
+                        <input type="email" id="email" name="email" class="form-control sh-input" placeholder="you@example.com" required autocomplete="email">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-medium text-dark">Password</label>
+                        <input type="password" id="password" name="password" class="form-control sh-input" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+                    <div class="d-grid mb-4">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-3 sh-btn-primary">Log in</button>
+                    </div>
+                </form>
+                <p class="text-center text-secondary small mb-0">
+                    New here? <a href="{{ url_for('register') }}" class="sh-link fw-medium">Create an account</a>
+                </p>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" class="form-control" required>
-        </div>
-        <button type="submit" class="btn" style="width: 100%;">Login</button>
-    </form>
-    <br>
-    <p style="text-align: center;">Don't have an account? <a href="{{ url_for('register') }}">Register here</a>.</p>
+    </div>
 </div>
 {% endblock %}

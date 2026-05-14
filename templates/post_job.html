@@ -1,29 +1,39 @@
 {% extends 'base.html' %}
 
-{% block title %}Post a Job - SmartHire{% endblock %}
+{% block title %}Post a Job - Chizhya's Career Hub{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 600px; margin: 0 auto;">
-    <h2>Post a New Job</h2>
-    <br>
-    <form action="{{ url_for('post_job') }}" method="POST">
-        <div class="form-group">
-            <label for="title">Job Title</label>
-            <input type="text" id="title" name="title" class="form-control" required>
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
+        <div class="card border-0 shadow-sm sh-form-card">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center text-md-start mb-4">
+                    <h1 class="h4 fw-bold text-dark mb-2">Post a new job</h1>
+                    <p class="text-secondary small mb-0">Share the essentials — candidates will see this on the job board.</p>
+                </div>
+                <form action="{{ url_for('post_job') }}" method="POST" class="sh-form">
+                    <div class="mb-4">
+                        <label for="title" class="form-label fw-medium text-dark">Job title</label>
+                        <input type="text" id="title" name="title" class="form-control sh-input" placeholder="e.g. Frontend Developer" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="company" class="form-label fw-medium text-dark">Company name</label>
+                        <input type="text" id="company" name="company" class="form-control sh-input" placeholder="Your company" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="location" class="form-label fw-medium text-dark">Location</label>
+                        <input type="text" id="location" name="location" class="form-control sh-input" placeholder="City, region, or Remote" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-medium text-dark">Job description</label>
+                        <textarea id="description" name="description" class="form-control sh-input sh-textarea" rows="7" placeholder="Responsibilities, requirements, and what makes this role a great fit…" required></textarea>
+                    </div>
+                    <div class="d-grid gap-2 pt-2">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-3 sh-btn-primary">Publish listing</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="company">Company Name</label>
-            <input type="text" id="company" name="company" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="location">Location</label>
-            <input type="text" id="location" name="location" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="description">Job Description</label>
-            <textarea id="description" name="description" class="form-control" rows="6" required></textarea>
-        </div>
-        <button type="submit" class="btn" style="width: 100%;">Post Job</button>
-    </form>
+    </div>
 </div>
 {% endblock %}

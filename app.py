@@ -1,63 +1,81 @@
+"""
+Chizhya's Career Hub — Flask app backed by SQLite 3 (stdlib sqlite3 only; no MySQL).
+"""
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 import os
 
-app = Flask(__name__)
-app.secret_key = 'your_secret_key_here' # In a real app, use a secure random key
+from db_path import DATABASE
 
-DATABASE = 'smarthire.db'
+app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_SECRET_KEY') or 'dev-only-change-with-FLASK_SECRET_KEY'
+
+VALID_ROLES = frozenset({'job_seeker', 'employer'})
+
+
+def _parse_sqlite_datetime(val):
+    """SQLite often returns TIMESTAMP columns as str; normalize for display."""
+    if val is None:
+        return None
+    if isinstance(val, datetime):
+        return val
+    if isinstance(val, str):
+        s = val.strip()
+        for fmt, n in (('%Y-%m-%d %H:%M:%S', 19), ('%Y-%m-%d', 10)):
+            try:
+                return datetime.strptime(s[:n], fmt)
+            except ValueError:
+                continue
+    return None
+
+
+@app.template_filter('sh_dt')
+def sh_dt_filter(value, fmt='%Y-%m-%d'):
+    dt = _parse_sqlite_datetime(value)
+    return dt.strftime(fmt) if dt else ''
 
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
+    conn.execute("PRAGMA foreign_keys = ON")
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    if not os.path.exists(DATABASE):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-        CREATE TABLE users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            email TEXT NOT NULL UNIQUE,
-            password TEXT NOT NULL,
-            role TEXT NOT NULL
-        )
-        ''')
-        
-        cursor.execute('''
-        CREATE TABLE jobs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            description TEXT NOT NULL,
-            company TEXT NOT NULL,
-            location TEXT NOT NULL,
-            user_id INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-        )
-        ''')
-        
-        cursor.execute('''
-        CREATE TABLE applications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            job_id INTEGER NOT NULL,
-            user_id INTEGER NOT NULL,
-            cover_letter TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (job_id) REFERENCES jobs (id) ON DELETE CASCADE,
-            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-        )
-        ''')
-        
+    """Create the SQLite file and tables from database.sql if the DB file does not exist yet."""
+    if os.path.exists(DATABASE):
+        return
+    schema_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database.sql")
+    conn = get_db_connection()
+    try:
+        with open(schema_path, "r", encoding="utf-8") as f:
+            conn.executescript(f.read())
         conn.commit()
+    finally:
         conn.close()
+
+
+def ensure_indexes():
+    """Migrations for existing DB files (idempotent)."""
+    if not os.path.exists(DATABASE):
+        return
+    conn = get_db_connection()
+    try:
+        conn.execute(
+            'CREATE UNIQUE INDEX IF NOT EXISTS idx_applications_job_user '
+            'ON applications(job_id, user_id)'
+        )
+        conn.commit()
+    except sqlite3.OperationalError as e:
+        print('ensure_indexes:', e, flush=True)
+    finally:
+        conn.close()
+
 
 # Initialize DB on startup
 init_db()
+ensure_indexes()
 
 @app.route('/')
 def index():
@@ -78,42 +96,59 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        role = request.form['role']
-        
+        username = (request.form.get('username') or '').strip()
+        email = (request.form.get('email') or '').strip()
+        password = request.form.get('password') or ''
+        role = request.form.get('role') or ''
+
+        if not username or not email or not password:
+            flash('Please fill in all fields.', 'danger')
+            return render_template('register.html')
+        if len(password) < 8:
+            flash('Password must be at least 8 characters.', 'danger')
+            return render_template('register.html')
+        if role not in VALID_ROLES:
+            flash('Please choose a valid account type.', 'danger')
+            return render_template('register.html')
+
         hashed_password = generate_password_hash(password)
-        
+
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         try:
-            cursor.execute("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)", 
-                           (username, email, hashed_password, role))
+            cursor.execute(
+                "INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)",
+                (username, email, hashed_password, role),
+            )
             conn.commit()
             flash('Registration successful! Please login.', 'success')
             return redirect(url_for('login'))
-        except sqlite3.IntegrityError:
-            flash('Email already exists!', 'danger')
+        except sqlite3.IntegrityError as err:
+            msg = str(err).lower()
+            if 'email' in msg or 'users.email' in msg:
+                flash('Email already exists!', 'danger')
+            else:
+                flash('Could not complete registration. Please check your details.', 'danger')
         finally:
             conn.close()
-            
+
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        
+        email = (request.form.get('email') or '').strip()
+        password = request.form.get('password') or ''
+
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
         user = cursor.fetchone()
         conn.close()
-        
+
         if user and check_password_hash(user['password'], password):
+            session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['role'] = user['role']
@@ -121,7 +156,7 @@ def login():
             return redirect(url_for('dashboard'))
         else:
             flash('Invalid email or password.', 'danger')
-            
+
     return render_template('login.html')
 
 @app.route('/logout')
@@ -170,11 +205,15 @@ def post_job():
         return redirect(url_for('index'))
         
     if request.method == 'POST':
-        title = request.form['title']
-        company = request.form['company']
-        location = request.form['location']
-        description = request.form['description']
-        
+        title = (request.form.get('title') or '').strip()
+        company = (request.form.get('company') or '').strip()
+        location = (request.form.get('location') or '').strip()
+        description = (request.form.get('description') or '').strip()
+
+        if not title or not company or not location or not description:
+            flash('Please complete all fields.', 'danger')
+            return render_template('post_job.html')
+
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("INSERT INTO jobs (title, company, location, description, user_id) VALUES (?, ?, ?, ?, ?)",
@@ -218,18 +257,27 @@ def apply(id):
         return redirect(url_for('index'))
         
     if request.method == 'POST':
-        cover_letter = request.form['cover_letter']
-        
-        # Check if already applied
+        cover_letter = (request.form.get('cover_letter') or '').strip()
+        if len(cover_letter) < 20:
+            flash('Please write a cover letter of at least 20 characters.', 'warning')
+            conn.close()
+            return redirect(url_for('apply', id=id))
+
         cursor.execute("SELECT id FROM applications WHERE job_id = ? AND user_id = ?", (id, session['user_id']))
         if cursor.fetchone():
             flash('You have already applied for this job.', 'warning')
         else:
-            cursor.execute("INSERT INTO applications (job_id, user_id, cover_letter) VALUES (?, ?, ?)",
-                           (id, session['user_id'], cover_letter))
-            conn.commit()
-            flash('Application submitted successfully!', 'success')
-            
+            try:
+                cursor.execute(
+                    "INSERT INTO applications (job_id, user_id, cover_letter) VALUES (?, ?, ?)",
+                    (id, session['user_id'], cover_letter),
+                )
+                conn.commit()
+                flash('Application submitted successfully!', 'success')
+            except sqlite3.IntegrityError:
+                conn.rollback()
+                flash('You have already applied for this job.', 'warning')
+
         conn.close()
         return redirect(url_for('dashboard'))
         
@@ -239,6 +287,7 @@ def apply(id):
 @app.route('/delete-job/<int:id>', methods=['POST'])
 def delete_job(id):
     if 'user_id' not in session or session['role'] != 'employer':
+        flash('You must be logged in as an employer to delete a job.', 'warning')
         return redirect(url_for('index'))
         
     conn = get_db_connection()

@@ -1,37 +1,108 @@
 {% extends 'base.html' %}
 
-{% block title %}Home - SmartHire{% endblock %}
+{% block title %}Home - Chizhya's Career Hub{% endblock %}
 
 {% block content %}
-<div class="search-bar">
-    <form action="{{ url_for('index') }}" method="GET" style="display: flex; width: 100%; gap: 0.5rem;">
-        <input type="text" name="q" class="form-control" placeholder="Search jobs by title or location..." value="{{ search_query }}">
-        <button type="submit" class="btn">Search</button>
-        {% if search_query %}
-            <a href="{{ url_for('index') }}" class="btn" style="background-color: #6c757d;">Clear</a>
-        {% endif %}
-    </form>
-</div>
-
-<h2>Latest Jobs</h2>
-<p>Find your next opportunity with SmartHire.</p>
-<br>
-
-<div class="job-list">
-    {% if jobs %}
-        {% for job in jobs %}
-            <div class="card job-card">
-                <a href="{{ url_for('job_details', id=job.id) }}" class="job-title">{{ job.title }}</a>
-                <div class="job-meta">
-                    <strong>{{ job.company }}</strong> &bull; {{ job.location }} &bull; Posted on {{ job.created_at.strftime('%Y-%m-%d') }}
-                </div>
-                <p class="job-desc">{{ job.description[:150] }}...</p>
-                <br>
-                <a href="{{ url_for('job_details', id=job.id) }}" class="btn btn-sm">View Details</a>
+<section class="sh-hero text-center text-lg-start mb-5 rounded-4 overflow-hidden position-relative">
+    <div class="sh-hero-bg position-absolute top-0 start-0 w-100 h-100"></div>
+    <div class="position-relative py-5 px-4 px-lg-5">
+        <div class="row align-items-center justify-content-center justify-content-lg-between g-4">
+            <div class="col-lg-7 sh-hero-fade">
+                <p class="small text-uppercase fw-semibold letter-spacing mb-2 sh-hero-kicker">Your next career move</p>
+                <h1 class="display-5 fw-bold text-white mb-3 lh-sm">Find Your Dream Job with Chizhya's Career Hub</h1>
+                <p class="lead fs-6 mb-4 mb-lg-5 sh-hero-sub" style="max-width: 32rem;">
+                    Browse curated listings, search by role or city, and apply in minutes — simple tools for real opportunities.
+                </p>
+                <form action="{{ url_for('index') }}" method="GET" class="sh-hero-search d-flex flex-column flex-sm-row gap-2 gap-sm-3 align-items-stretch align-items-sm-center">
+                    <div class="flex-grow-1 position-relative">
+                        <i class="bi bi-search sh-input-icon text-secondary" aria-hidden="true"></i>
+                        <input type="text" name="q" class="form-control form-control-lg sh-input-hero border-0 shadow-sm" placeholder="Search by job title or location…" value="{{ search_query }}" aria-label="Search jobs">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-light btn-lg px-4 fw-semibold sh-btn-hero shadow-sm">Search</button>
+                        {% if search_query %}
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-lg px-3" title="Clear search">Clear</a>
+                        {% endif %}
+                    </div>
+                </form>
             </div>
+            <div class="col-lg-4 d-none d-lg-block text-center sh-hero-fade sh-hero-delay">
+                <div class="sh-hero-illus d-inline-flex align-items-center justify-content-center rounded-4 shadow">
+                    <i class="bi bi-people-fill" aria-hidden="true"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mb-2">
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-md-between gap-3 mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">Latest Jobs</h2>
+            <p class="text-secondary mb-0 small">Fresh listings from employers on Chizhya's Career Hub.</p>
+        </div>
+    </div>
+
+    {% if jobs %}
+    <div class="row g-4">
+        {% for job in jobs %}
+        <div class="col-12 col-md-6 col-xl-4 sh-card-reveal" style="--i: {{ loop.index0 }}">
+            <article class="card h-100 border-0 shadow-sm sh-job-card sh-card-hover">
+                <div class="card-body d-flex flex-column p-4">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                        <span class="badge sh-badge-type rounded-pill">Full-time</span>
+                        <span class="small text-secondary text-nowrap">
+                            <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>{{ job.created_at|sh_dt('%b %d, %Y') }}
+                        </span>
+                    </div>
+                    <h3 class="h5 fw-semibold mb-2">
+                        <a href="{{ url_for('job_details', id=job.id) }}" class="text-decoration-none text-dark sh-job-title">{{ job.title }}</a>
+                    </h3>
+                    <p class="small text-secondary mb-2">
+                        <i class="bi bi-building me-1" aria-hidden="true"></i>{{ job.company }}
+                    </p>
+                    <p class="small text-secondary mb-3">
+                        <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ job.location }}
+                    </p>
+                    <p class="small text-secondary flex-grow-1 mb-4" style="line-height: 1.5;">
+                        {{ job.description[:120] }}{% if job.description|length > 120 %}…{% endif %}
+                    </p>
+                    <div class="d-flex gap-2 mt-auto position-relative" style="z-index: 1;">
+                        <a href="{{ url_for('job_details', id=job.id) }}" class="btn btn-outline-primary btn-sm rounded-3 px-3">View</a>
+                        {% if session.get('role') == 'job_seeker' %}
+                        <a href="{{ url_for('apply', id=job.id) }}" class="btn btn-primary btn-sm rounded-3 px-3 sh-btn-primary">Apply</a>
+                        {% elif not session.get('user_id') %}
+                        <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm rounded-3 px-3 sh-btn-primary">Apply</a>
+                        {% else %}
+                        <a href="{{ url_for('job_details', id=job.id) }}" class="btn btn-primary btn-sm rounded-3 px-3 sh-btn-primary">Details</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+        </div>
         {% endfor %}
+    </div>
     {% else %}
-        <p>No jobs found.</p>
+    <div class="sh-empty-state card border-0 shadow-sm text-center py-5 px-4 mx-auto" style="max-width: 28rem;">
+        <div class="sh-empty-icon rounded-circle d-inline-flex align-items-center justify-content-center mb-4">
+            <i class="bi bi-inbox" aria-hidden="true"></i>
+        </div>
+        <h3 class="h5 fw-semibold text-dark mb-2">No jobs to show yet</h3>
+        <p class="text-secondary small mb-4">
+            {% if search_query %}
+            Nothing matched “{{ search_query }}”. Try different keywords or clear your search.
+            {% else %}
+            Listings will appear here once employers post roles. Check back soon!
+            {% endif %}
+        </p>
+        {% if search_query %}
+        <a href="{{ url_for('index') }}" class="btn btn-primary rounded-3 sh-btn-primary">Clear search</a>
+        {% elif session.get('role') == 'employer' %}
+        <a href="{{ url_for('post_job') }}" class="btn btn-primary rounded-3 sh-btn-primary">Post the first job</a>
+        {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary rounded-3 sh-btn-primary">Create an account</a>
+        {% endif %}
+    </div>
     {% endif %}
-</div>
+</section>
 {% endblock %}

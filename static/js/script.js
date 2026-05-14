@@ -1,25 +1,41 @@
-// Simple validation for forms
-document.addEventListener('DOMContentLoaded', function() {
-    const forms = document.querySelectorAll('form');
-    
-    forms.forEach(form => {
-        form.addEventListener('submit', function(event) {
+document.addEventListener("DOMContentLoaded", function () {
+    const yearEl = document.getElementById("footer-year");
+    if (yearEl) {
+        yearEl.textContent = new Date().getFullYear();
+    }
+
+    document.querySelectorAll("form").forEach(function (form) {
+        form.addEventListener("submit", function (event) {
             let isValid = true;
-            const requiredInputs = form.querySelectorAll('input[required], textarea[required], select[required]');
-            
-            requiredInputs.forEach(input => {
+            const requiredInputs = form.querySelectorAll(
+                "input[required], textarea[required], select[required]"
+            );
+
+            requiredInputs.forEach(function (input) {
                 if (!input.value.trim()) {
                     isValid = false;
-                    input.style.borderColor = 'var(--danger-color)';
+                    input.classList.add("is-invalid");
                 } else {
-                    input.style.borderColor = 'var(--border-color)';
+                    input.classList.remove("is-invalid");
                 }
             });
-            
+
             if (!isValid) {
                 event.preventDefault();
-                alert('Please fill in all required fields.');
+                const firstInvalid = form.querySelector(".is-invalid");
+                if (firstInvalid && typeof firstInvalid.focus === "function") {
+                    firstInvalid.focus();
+                }
             }
+        });
+
+        form.querySelectorAll("input, textarea, select").forEach(function (el) {
+            el.addEventListener("input", function () {
+                el.classList.remove("is-invalid");
+            });
+            el.addEventListener("change", function () {
+                el.classList.remove("is-invalid");
+            });
         });
     });
 });

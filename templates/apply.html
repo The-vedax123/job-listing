@@ -1,22 +1,31 @@
 {% extends 'base.html' %}
 
-{% block title %}Apply for {{ job.title }} - SmartHire{% endblock %}
+{% block title %}Apply for {{ job.title }} - Chizhya's Career Hub{% endblock %}
 
 {% block content %}
-<div class="card" style="max-width: 700px; margin: 0 auto;">
-    <h2>Apply for Job: {{ job.title }}</h2>
-    <p style="color: #6c757d; margin-bottom: 1.5rem;">at <strong>{{ job.company }}</strong> ({{ job.location }})</p>
-    
-    <form action="{{ url_for('apply', id=job.id) }}" method="POST">
-        <div class="form-group">
-            <label for="cover_letter">Cover Letter</label>
-            <textarea id="cover_letter" name="cover_letter" class="form-control" rows="10" placeholder="Explain why you are a good fit for this role..." required></textarea>
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+        <div class="card border-0 shadow-sm sh-form-card mb-3">
+            <div class="card-body p-4 p-md-5">
+                <p class="small text-uppercase text-secondary fw-semibold mb-2">Application</p>
+                <h1 class="h4 fw-bold text-dark mb-2">Apply for {{ job.title }}</h1>
+                <p class="text-secondary small mb-4">
+                    <i class="bi bi-building me-1" aria-hidden="true"></i>{{ job.company }}
+                    <span class="mx-2">·</span>
+                    <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ job.location }}
+                </p>
+                <form action="{{ url_for('apply', id=job.id) }}" method="POST" class="sh-form">
+                    <div class="mb-4">
+                        <label for="cover_letter" class="form-label fw-medium text-dark">Cover letter</label>
+                        <textarea id="cover_letter" name="cover_letter" class="form-control sh-input sh-textarea" rows="10" placeholder="Introduce yourself and explain why you are a strong fit for this role…" required></textarea>
+                    </div>
+                    <div class="d-flex flex-column flex-sm-row gap-2 gap-sm-3">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-3 sh-btn-primary flex-sm-grow-1">Submit application</button>
+                        <a href="{{ url_for('job_details', id=job.id) }}" class="btn btn-outline-secondary btn-lg rounded-3">Cancel</a>
+                    </div>
+                </form>
+            </div>
         </div>
-        
-        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-            <button type="submit" class="btn" style="flex: 1;">Submit Application</button>
-            <a href="{{ url_for('job_details', id=job.id) }}" class="btn" style="background-color: #6c757d; text-align: center;">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
 {% endblock %}

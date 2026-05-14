@@ -1,32 +1,45 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ job.title }} - SmartHire{% endblock %}
+{% block title %}{{ job.title }} - Chizhya's Career Hub{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div>
-            <h2 style="color: var(--primary-color); margin-bottom: 0.5rem;">{{ job.title }}</h2>
-            <div class="job-meta" style="font-size: 1.1rem;">
-                <strong>{{ job.company }}</strong> &bull; {{ job.location }}
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="sh-job-detail-head text-white p-4 p-md-5 position-relative">
+                <div class="position-relative" style="z-index: 1;">
+                    <div class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-lg-between gap-4">
+                        <div class="flex-grow-1">
+                            <span class="badge bg-white bg-opacity-25 text-white border border-white border-opacity-25 rounded-pill mb-3">Full-time</span>
+                            <h1 class="h3 fw-bold text-white mb-2">{{ job.title }}</h1>
+                            <p class="mb-2 small sh-hero-sub-on-dark">
+                                <i class="bi bi-building me-1" aria-hidden="true"></i>{{ job.company }}
+                                <span class="mx-2">·</span>
+                                <i class="bi bi-geo-alt me-1" aria-hidden="true"></i>{{ job.location }}
+                            </p>
+                            <p class="small mb-0 sh-hero-kicker-on-dark">
+                                Posted by {{ job.posted_by }} · {{ job.created_at|sh_dt('%B %d, %Y') }}
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            {% if session.get('role') == 'job_seeker' %}
+                            <a href="{{ url_for('apply', id=job.id) }}" class="btn btn-light btn-lg rounded-3 px-4 fw-semibold shadow-sm">Apply now</a>
+                            {% elif not session.get('user_id') %}
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg rounded-3 px-4">Log in to apply</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
-            <p style="color: #6c757d; margin-bottom: 1rem;">Posted by {{ job.posted_by }} on {{ job.created_at.strftime('%Y-%m-%d') }}</p>
+            <div class="card-body p-4 p-md-5">
+                <h2 class="h5 fw-bold text-dark mb-3">Job description</h2>
+                <div class="sh-job-body text-secondary small" style="line-height: 1.7; white-space: pre-wrap;">{{ job.description }}</div>
+                <hr class="my-4 opacity-25">
+                <a href="{{ url_for('index') }}" class="btn btn-link text-decoration-none p-0 sh-link fw-medium">
+                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Back to jobs
+                </a>
+            </div>
         </div>
-        
-        {% if session.get('role') == 'job_seeker' %}
-            <a href="{{ url_for('apply', id=job.id) }}" class="btn" style="font-size: 1.2rem; padding: 0.75rem 1.5rem;">Apply Now</a>
-        {% elif not session.get('user_id') %}
-            <a href="{{ url_for('login') }}" class="btn" style="background-color: #6c757d;">Login to Apply</a>
-        {% endif %}
     </div>
-
-    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0;">
-
-    <h3>Job Description</h3>
-    <br>
-    <div style="white-space: pre-wrap; font-size: 1.05rem;">{{ job.description }}</div>
-    
-    <br><br>
-    <a href="{{ url_for('index') }}" style="color: var(--primary-color); text-decoration: none;">&larr; Back to Jobs</a>
 </div>
 {% endblock %}
